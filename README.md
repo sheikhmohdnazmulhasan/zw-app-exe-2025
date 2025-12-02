@@ -166,9 +166,3 @@ From `package.json`:
   - **NSIS** for installer (`oneClick` disabled, allows custom install directory, and creates Desktop and Start Menu shortcuts).
   - **Portable** target for a no‑install executable.
 - Assets under `assets/` are copied into the packaged app under `resources/assets`.
-
----
-
-## License
-
-This project is licensed under the **ISC License** as specified in `package.json`.

@@ -36,7 +36,15 @@ const createWindow = (): void => {
     show: false,
   });
 
-  mainWindow.loadURL(APP_URL);
+  /**
+   * Load the local index.html first so it can:
+   * - Show an initial loading state.
+   * - Detect missing internet and show a minimal offline state.
+   *
+   * The index.html then redirects to the remote APP_URL when online.
+   */
+  const indexPath = path.join(__dirname, "index.html");
+  mainWindow.loadFile(indexPath);
 
   mainWindow.once("ready-to-show", () => {
     if (!mainWindow) {
