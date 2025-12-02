@@ -42,12 +42,6 @@
     "win": {
       "target": [
         {
-          "target": "msix",
-          "arch": [
-            "x64"
-          ]
-        },
-        {
           "target": "nsis",
           "arch": [
             "x64"
@@ -61,15 +55,6 @@
         }
       ],
       "icon": "assets/logo.png"
-    },
-    "msix": {
-      "publisher": "CN=YourPublisherIdFromPartnerCenter",
-      "packageName": "ZendoWhisper",
-      "displayName": "ZendoWhisper",
-      "identityName": "YourIdentityNameFromPartnerCenter",
-      "capabilities": [
-        "internetClient"
-      ]
     },
     "nsis": {
       "oneClick": false,
