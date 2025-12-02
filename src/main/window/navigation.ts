@@ -1,5 +1,6 @@
 import type { BrowserWindow } from "electron";
 import { shell } from "electron";
+import { isInAppHost } from "./navigationConfig";
 
 /**
  * Navigation + external link handling for the main window.
@@ -17,13 +18,7 @@ export const registerNavigationHandlers = (mainWindow: BrowserWindow): void => {
     try {
       const parsedUrl = new URL(url);
       const hostname = parsedUrl.hostname;
-      if (
-        hostname === "app.zendowhisper.com" ||
-        hostname === "localhost" ||
-        hostname === "accounts.google.com" ||
-        hostname === "odsoebcyqmipdqarlycz.supabase.co" ||
-        hostname.endsWith(".supabase.co")
-      ) {
+      if (isInAppHost(hostname)) {
         return { action: "allow" };
       }
     } catch {
@@ -40,13 +35,7 @@ export const registerNavigationHandlers = (mainWindow: BrowserWindow): void => {
       const parsedUrl = new URL(navigationUrl);
       const hostname = parsedUrl.hostname;
 
-      if (
-        hostname === "app.zendowhisper.com" ||
-        hostname === "localhost" ||
-        hostname === "accounts.google.com" ||
-        hostname === "odsoebcyqmipdqarlycz.supabase.co" ||
-        hostname.endsWith(".supabase.co")
-      ) {
+      if (isInAppHost(hostname)) {
         // Keep in app window.
         return;
       }
