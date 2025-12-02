@@ -1,39 +1,46 @@
-import { app, BrowserWindow, ipcMain, shell } from "electron";
+import { app, BrowserWindow } from "electron";
 import * as path from "node:path";
+import {
+  APP_TITLE,
+  APP_URL,
+  AUTO_HIDE_MENU_BAR,
+  WINDOW_BACKGROUND_COLOR,
+  WINDOW_BOUNDS,
+} from "./main/config/appConfig";
+import { registerNavigationHandlers } from "./main/window/navigation";
+import { registerWindowControlHandlers } from "./main/ipc/windowControls";
 
 let mainWindow: BrowserWindow | null = null;
 
-const createWindow = () => {
-  // Get the logo path - works in both dev and production
-  // extraResources puts assets in resources/assets/ in production
+const getMainWindow = (): BrowserWindow | null => mainWindow;
+
+const createWindow = (): void => {
   const logoPath = app.isPackaged
     ? path.join(process.resourcesPath, "assets", "logo.png")
     : path.join(__dirname, "..", "assets", "logo.png");
 
-  const APP_URL = "https://app.zendowhisper.com/";
+  const preloadPath = path.join(__dirname, "preload.js");
 
   mainWindow = new BrowserWindow({
-    width: 1280,
-    height: 800,
-    minWidth: 800,
-    minHeight: 600,
-    title: "ZendoWhisper",
+    ...WINDOW_BOUNDS,
+    title: APP_TITLE,
     icon: logoPath,
-    autoHideMenuBar: true,
-    backgroundColor: "#ffffff", // Default white background, will be overridden by remote site
+    autoHideMenuBar: AUTO_HIDE_MENU_BAR,
+    backgroundColor: WINDOW_BACKGROUND_COLOR,
     webPreferences: {
-      preload: path.join(__dirname, "preload.js"),
+      preload: preloadPath,
       contextIsolation: true,
       nodeIntegration: false,
     },
     show: false,
   });
 
-  // Load the remote application directly.
   mainWindow.loadURL(APP_URL);
 
   mainWindow.once("ready-to-show", () => {
-    if (!mainWindow) return;
+    if (!mainWindow) {
+      return;
+    }
     mainWindow.show();
   });
 
@@ -41,75 +48,16 @@ const createWindow = () => {
     mainWindow = null;
   });
 
-  // Handle external links - open in default browser
-  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    // Open all new window/tab requests in the default browser
-    shell.openExternal(url);
-    return { action: "deny" }; // Prevent opening in Electron window
-  });
-
-  // Handle navigation to external URLs (when user clicks links)
-  mainWindow.webContents.on("will-navigate", (event, navigationUrl) => {
-    try {
-      const parsedUrl = new URL(navigationUrl);
-      const currentUrl = mainWindow?.webContents.getURL();
-
-      // Allow navigation to app.zendowhisper.com (the main app domain)
-      if (
-        parsedUrl.hostname === "app.zendowhisper.com" ||
-        parsedUrl.hostname === "localhost" ||
-        parsedUrl.protocol === "file:"
-      ) {
-        return; // Allow navigation
-      }
-
-      // If navigating to a different domain, open in default browser
-      if (currentUrl) {
-        const currentParsedUrl = new URL(currentUrl);
-        if (parsedUrl.origin !== currentParsedUrl.origin) {
-          event.preventDefault();
-          shell.openExternal(navigationUrl);
-        }
-      }
-    } catch (error) {
-      // If URL parsing fails, allow navigation
-      console.error("Error parsing URL:", error);
-    }
-  });
+  registerNavigationHandlers(mainWindow);
 };
 
-// Handle window controls
-ipcMain.handle("window-minimize", () => {
-  if (mainWindow) {
-    mainWindow.minimize();
-  }
-});
-
-ipcMain.handle("window-maximize", () => {
-  if (mainWindow) {
-    if (mainWindow.isMaximized()) {
-      mainWindow.unmaximize();
-    } else {
-      mainWindow.maximize();
-    }
-  }
-});
-
-ipcMain.handle("window-close", () => {
-  if (mainWindow) {
-    mainWindow.close();
-  }
-});
-
-ipcMain.handle("window-is-maximized", () => {
-  return mainWindow ? mainWindow.isMaximized() : false;
-});
+registerWindowControlHandlers(getMainWindow);
 
 app.whenReady().then(() => {
-  // Set app icon (useful for macOS dock and Windows taskbar)
   const logoPath = app.isPackaged
     ? path.join(process.resourcesPath, "assets", "logo.png")
     : path.join(__dirname, "..", "assets", "logo.png");
+
   if (process.platform === "darwin" && app.dock) {
     app.dock.setIcon(logoPath);
   }
