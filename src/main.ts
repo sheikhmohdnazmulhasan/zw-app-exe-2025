@@ -9,7 +9,9 @@ const createWindow = () => {
   const logoPath = app.isPackaged
     ? path.join(process.resourcesPath, "assets", "logo.png")
     : path.join(__dirname, "..", "assets", "logo.png");
-  
+
+  const APP_URL = "https://app.zendowhisper.com/";
+
   mainWindow = new BrowserWindow({
     width: 1280,
     height: 800,
@@ -22,14 +24,13 @@ const createWindow = () => {
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
-      nodeIntegration: false
+      nodeIntegration: false,
     },
-    show: false
+    show: false,
   });
 
-  // Load the local shell (loading + no-internet UI).
-  const indexHtml = path.join(__dirname, "index.html");
-  mainWindow.loadFile(indexHtml);
+  // Load the remote application directly.
+  mainWindow.loadURL(APP_URL);
 
   mainWindow.once("ready-to-show", () => {
     if (!mainWindow) return;
@@ -38,21 +39,6 @@ const createWindow = () => {
 
   mainWindow.on("closed", () => {
     mainWindow = null;
-  });
-
-  // Handle page load errors
-  mainWindow.webContents.on("did-fail-load", (event, errorCode, errorDescription, validatedURL) => {
-    if (!mainWindow) return;
-    
-    // Only handle errors for the remote URL, not for local file loads
-    if (validatedURL && validatedURL.includes("app.zendowhisper.com")) {
-      // Send error event to renderer
-      mainWindow.webContents.executeJavaScript(`
-        if (window.showError) {
-          window.showError(${errorCode}, "${errorDescription.replace(/"/g, '\\"')}");
-        }
-      `).catch(() => {});
-    }
   });
 
   // Handle external links - open in default browser
@@ -67,14 +53,16 @@ const createWindow = () => {
     try {
       const parsedUrl = new URL(navigationUrl);
       const currentUrl = mainWindow?.webContents.getURL();
-      
+
       // Allow navigation to app.zendowhisper.com (the main app domain)
-      if (parsedUrl.hostname === "app.zendowhisper.com" || 
-          parsedUrl.hostname === "localhost" ||
-          parsedUrl.protocol === "file:") {
+      if (
+        parsedUrl.hostname === "app.zendowhisper.com" ||
+        parsedUrl.hostname === "localhost" ||
+        parsedUrl.protocol === "file:"
+      ) {
         return; // Allow navigation
       }
-      
+
       // If navigating to a different domain, open in default browser
       if (currentUrl) {
         const currentParsedUrl = new URL(currentUrl);
@@ -88,7 +76,6 @@ const createWindow = () => {
       console.error("Error parsing URL:", error);
     }
   });
-
 };
 
 // Handle window controls
@@ -126,7 +113,7 @@ app.whenReady().then(() => {
   if (process.platform === "darwin" && app.dock) {
     app.dock.setIcon(logoPath);
   }
-  
+
   createWindow();
 
   app.on("activate", () => {
