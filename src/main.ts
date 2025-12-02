@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, Menu } from "electron";
 import * as path from "node:path";
 import {
   APP_TITLE,
@@ -9,6 +9,7 @@ import {
 } from "./main/config/appConfig";
 import { registerNavigationHandlers } from "./main/window/navigation";
 import { registerWindowControlHandlers } from "./main/ipc/windowControls";
+import { buildAppMenu } from "./main/menu/appMenu";
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -63,6 +64,9 @@ app.whenReady().then(() => {
   }
 
   createWindow();
+
+  const menu = buildAppMenu(getMainWindow);
+  Menu.setApplicationMenu(menu);
 
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) {
