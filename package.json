@@ -4,7 +4,7 @@
   "description": "ZendoWhisper Desktop Application",
   "main": "dist/main.js",
   "scripts": {
-    "build": "tsc && cp src/index.html dist/index.html",
+    "build": "tsc && node scripts/copyIndexHtml.js",
     "start": "npm run build && electron .",
     "dist": "npm run build && electron-builder",
     "dist:win": "npm run build && electron-builder --win",
